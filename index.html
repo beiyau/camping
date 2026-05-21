@@ -545,7 +545,7 @@ const categories = {
     extraCount: EXTRA
   },
   rvOutdoor: {
-    items: ['餐巾紙','垃圾袋 ×2','餐具','卡式爐','鍋子','瓦斯 ×2','調味粉/油','烘培紙','蒼蠅紙','水','洗碗精/菜瓜布','濕紙巾','酒精擦','擋風板','手套'],
+    items: ['餐巾紙','垃圾袋 ×2','餐具','卡式爐','鍋子','瓦斯 ×2','調味粉/油','烘培紙','蒼蠅紙','水','洗碗精/菜瓜布','濕紙巾','酒精擦','手套','擋風板'],
     extraCount: EXTRA
   },
   carItems: {
@@ -578,7 +578,7 @@ function makeCheckRow(text, isBlank = false) {
   const inp = document.createElement('input');
   inp.className = 'blank-input';
   inp.type = 'text';
-  inp.placeholder = isBlank ? '自填...' : '';
+  inp.placeholder = '';
   if (!isBlank) inp.value = text;
   row.appendChild(inp);
 
@@ -619,7 +619,7 @@ function renderFood() {
     const inp = document.createElement('input');
     inp.className = 'blank-input';
     inp.type = 'text';
-    inp.placeholder = i < defaultFood.length ? defaultFood[i] : '食材...';
+    inp.placeholder = '';
     // Pre-fill with default food names
     if (i < defaultFood.length) inp.value = defaultFood[i];
 
