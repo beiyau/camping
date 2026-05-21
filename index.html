@@ -450,8 +450,8 @@
     </div>
     <div class="altitude-row">
       <div class="field-group">
-        <label class="field-label">🏔 露營區域</label>
-        <input class="field-input" type="text" id="campArea" placeholder="輸入露營區名稱..." oninput="onAreaInput()">
+        <label class="field-label">🏔 露營區域／地址</label>
+        <input class="field-input" type="text" id="campArea" placeholder="輸入地址或地點名稱..." oninput="onAreaInput()">
         <div class="altitude-display" id="altitudeDisplay"></div>
       </div>
       <button class="btn-lookup" id="lookupBtn" onclick="lookupAltitude()">查海拔</button>
@@ -655,23 +655,39 @@ async function lookupAltitude() {
   showAlt('🔍 搜尋中…', false);
 
   try {
-    // Step 1: Geocoding via Open-Meteo (free, no key, CORS-friendly)
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(area)}&count=5&language=zh&format=json`;
-    const geoRes = await fetch(geoUrl);
+    // Step 1: Geocoding via Nominatim (OpenStreetMap) - free, CORS-friendly
+    const query = encodeURIComponent(area);
+    const geoUrl = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=5&countrycodes=tw&accept-language=zh-TW`;
+    const geoRes = await fetch(geoUrl, { headers: { 'Accept-Language': 'zh-TW,zh;q=0.9' } });
     const geoData = await geoRes.json();
 
-    if (!geoData.results || geoData.results.length === 0) {
-      showAlt('找不到此地點，請嘗試更完整的名稱', true);
-      return;
+    let lat, lon, placeName;
+
+    if (geoData && geoData.length > 0) {
+      // Use first Taiwan result
+      const place = geoData[0];
+      lat = parseFloat(place.lat);
+      lon = parseFloat(place.lon);
+      // Show short readable name
+      const parts = place.display_name.split(',');
+      placeName = parts.slice(0, 2).join(',').trim();
+    } else {
+      // Fallback: search without country restriction
+      const geoUrl2 = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=3&accept-language=zh-TW`;
+      const geoRes2 = await fetch(geoUrl2);
+      const geoData2 = await geoRes2.json();
+      if (!geoData2 || geoData2.length === 0) {
+        showAlt('找不到此地址，請試試更詳細的地址', true);
+        return;
+      }
+      const place = geoData2[0];
+      lat = parseFloat(place.lat);
+      lon = parseFloat(place.lon);
+      const parts = place.display_name.split(',');
+      placeName = parts.slice(0, 2).join(',').trim();
     }
 
-    // Pick the result in Taiwan (country_code: TW) if possible
-    const place = geoData.results.find(r => r.country_code === 'TW') || geoData.results[0];
-    const lat = place.latitude;
-    const lon = place.longitude;
-    const placeName = place.name;
-
-    // Step 2: Elevation via Open-Meteo Elevation API (free, no key, CORS-friendly)
+    // Step 2: Elevation via Open-Meteo (free, no key, CORS-friendly)
     const elevUrl = `https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`;
     const elevRes = await fetch(elevUrl);
     const elevData = await elevRes.json();
