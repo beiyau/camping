@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>露營自檢表</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #2d4a2d;
+    --moss: #4a6741;
+    --sage: #7a9e6e;
+    --cream: #f5f0e8;
+    --parchment: #ede4d0;
+    --bark: #8b6f47;
+    --earth: #5c4033;
+    --mist: #c8d8c0;
+    --ink: #1a2a1a;
+    --gold: #c8a84b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Paper texture background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    position: relative;
+  }
+
+  .header-deco {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .header-deco::before,
+  .header-deco::after {
+    content: '';
+    height: 1px;
+    width: 80px;
+    background: linear-gradient(to right, transparent, var(--bark));
+  }
+  .header-deco::after {
+    background: linear-gradient(to left, transparent, var(--bark));
+  }
+
+  .header-icon { font-size: 28px; }
+
+  h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(26px, 5vw, 40px);
+    font-weight: 900;
+    color: var(--forest);
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--bark);
+    letter-spacing: 0.2em;
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  /* Trip Info Panel */
+  .trip-panel {
+    background: var(--parchment);
+    border: 1px solid rgba(139,111,71,0.3);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(45,74,45,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .field-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--bark);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .field-input {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(139,111,71,0.35);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .field-input:focus {
+    border-color: var(--moss);
+    box-shadow: 0 0 0 3px rgba(74,103,65,0.12);
+  }
+
+  .altitude-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex: 2;
+    min-width: 260px;
+  }
+
+  .altitude-row .field-group { flex: 1; }
+
+  .btn-lookup {
+    background: var(--forest);
+    color: var(--cream);
+    border: none;
+    border-radius: 4px;
+    padding: 9px 16px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.05em;
+    height: 38px;
+  }
+
+  .btn-lookup:hover { background: var(--moss); }
+  .btn-lookup:active { transform: scale(0.97); }
+  .btn-lookup:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .altitude-display {
+    font-size: 12px;
+    color: var(--moss);
+    margin-top: 4px;
+    min-height: 18px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .altitude-display.error { color: #c0392b; }
+
+  /* Print button */
+  .print-btn {
+    background: transparent;
+    border: 1px solid var(--bark);
+    color: var(--bark);
+    border-radius: 4px;
+    padding: 8px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans TC', sans-serif;
+    letter-spacing: 0.08em;
+    align-self: flex-end;
+  }
+  .print-btn:hover { background: var(--bark); color: var(--cream); }
+
+  /* Reset button */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--sage);
+    color: var(--sage);
+    border-radius: 4px;
+    padding: 8px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans TC', sans-serif;
+    letter-spacing: 0.08em;
+    align-self: flex-end;
+  }
+  .reset-btn:hover { background: var(--sage); color: white; }
+
+  /* Checklist Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .category {
+    background: white;
+    border: 1px solid rgba(139,111,71,0.2);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(45,74,45,0.07);
+    break-inside: avoid;
+  }
+
+  .category-header {
+    background: var(--forest);
+    color: var(--cream);
+    padding: 10px 14px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .category-header .cat-icon { font-size: 16px; }
+
+  .category.outdoor .category-header { background: var(--moss); }
+  .category.vehicle .category-header { background: var(--bark); }
+  .category.room .category-header { background: #4a5a6a; }
+  .category.food .category-header { background: #8b5e3c; }
+
+  .item-list { padding: 8px 0; }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    padding: 5px 14px;
+    gap: 10px;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+  }
+
+  .item-row:last-child { border-bottom: none; }
+  .item-row:hover { background: rgba(122,158,110,0.06); }
+
+  .item-row.blank-row {
+    padding: 3px 14px;
+  }
+
+  .check-box {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--sage);
+    border-radius: 3px;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    background: white;
+  }
+
+  .check-box:hover { border-color: var(--forest); }
+
+  .check-box.checked {
+    background: var(--forest);
+    border-color: var(--forest);
+  }
+
+  .check-box.checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 6px;
+    height: 10px;
+    border: 2px solid white;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
+
+  .blank-input {
+    flex: 1;
+    border: none;
+    border-bottom: 1px dashed rgba(139,111,71,0.3);
+    background: transparent;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    outline: none;
+    padding: 2px 4px;
+    min-width: 0;
+    transition: color 0.15s;
+  }
+
+  .blank-input:focus {
+    border-bottom-color: var(--moss);
+  }
+
+  .item-row.checked-row .blank-input {
+    text-decoration: line-through;
+    color: var(--sage);
+  }
+
+  /* Food section spans full width */
+  .food-section {
+    grid-column: 1 / -1;
+  }
+
+  .food-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0;
+  }
+
+  .food-grid .item-row {
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    border-right: 1px solid rgba(0,0,0,0.04);
+  }
+
+  /* Divider */
+  .section-divider {
+    border: none;
+    border-top: 1px solid rgba(139,111,71,0.2);
+    margin: 8px 0;
+  }
+
+  /* Notes */
+  .notes-area {
+    background: white;
+    border: 1px solid rgba(139,111,71,0.2);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .notes-label {
+    font-size: 11px;
+    color: var(--bark);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .notes-input {
+    width: 100%;
+    min-height: 60px;
+    border: 1px dashed rgba(139,111,71,0.3);
+    background: transparent;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    padding: 8px;
+    outline: none;
+    border-radius: 3px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .notes-input:focus { border-color: var(--moss); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 36px;
+    font-size: 11px;
+    color: rgba(90,90,80,0.5);
+    letter-spacing: 0.1em;
+  }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    margin: 0 0 24px;
+    background: rgba(139,111,71,0.1);
+    border-radius: 20px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(to right, var(--sage), var(--forest));
+    border-radius: 20px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 11px;
+    color: var(--bark);
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Print styles */
+  @media print {
+    body { background: white; }
+    body::before { display: none; }
+    .btn-lookup, .print-btn, .reset-btn { display: none; }
+    .page { padding: 10px; }
+    .grid { gap: 10px; }
+    .category { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-deco">
+      <span class="header-icon">⛺</span>
+    </div>
+    <h1>露營自檢表</h1>
+    <p class="subtitle">Camping Equipment Checklist</p>
+  </div>
+
+  <!-- Trip Info -->
+  <div class="trip-panel">
+    <div class="field-group">
+      <label class="field-label">📅 出發日期</label>
+      <input class="field-input" type="date" id="tripDate">
+    </div>
+    <div class="field-group">
+      <label class="field-label">📅 回程日期</label>
+      <input class="field-input" type="date" id="returnDate">
+    </div>
+    <div class="altitude-row">
+      <div class="field-group">
+        <label class="field-label">🏔 露營區域</label>
+        <input class="field-input" type="text" id="campArea" placeholder="輸入露營區名稱..." oninput="onAreaInput()">
+        <div class="altitude-display" id="altitudeDisplay"></div>
+      </div>
+      <button class="btn-lookup" id="lookupBtn" onclick="lookupAltitude()">查海拔</button>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨 列印</button>
+    <button class="reset-btn" onclick="resetAll()">↺ 重置</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-label" id="progressLabel">已勾選 0 / 0 項</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- Checklists -->
+  <div class="grid">
+
+    <!-- RV桶(房間) -->
+    <div class="category">
+      <div class="category-header"><span class="cat-icon">🚌</span> RV桶（房間）</div>
+      <div class="item-list" id="rvRoom"></div>
+    </div>
+
+    <!-- 房間用 -->
+    <div class="category room">
+      <div class="category-header"><span class="cat-icon">🛏</span> 房間用品</div>
+      <div class="item-list" id="roomItems"></div>
+    </div>
+
+    <!-- 衣物袋 -->
+    <div class="category room">
+      <div class="category-header"><span class="cat-icon">👕</span> 衣物袋</div>
+      <div class="item-list" id="clothingItems"></div>
+    </div>
+
+    <!-- 戶外用 -->
+    <div class="category outdoor">
+      <div class="category-header"><span class="cat-icon">🌲</span> 戶外用</div>
+      <div class="item-list" id="outdoorItems"></div>
+    </div>
+
+    <!-- RV桶(戶外) -->
+    <div class="category outdoor">
+      <div class="category-header"><span class="cat-icon">🍳</span> RV桶（戶外）</div>
+      <div class="item-list" id="rvOutdoor"></div>
+    </div>
+
+    <!-- 車上桶子 -->
+    <div class="category vehicle">
+      <div class="category-header"><span class="cat-icon">🚗</span> 車上桶子</div>
+      <div class="item-list" id="carItems"></div>
+    </div>
+
+    <!-- 食材 -->
+    <div class="category food food-section">
+      <div class="category-header"><span class="cat-icon">🥗</span> 食材（每次重新填寫）</div>
+      <div class="food-grid" id="foodItems"></div>
+    </div>
+
+  </div>
+
+  <!-- Notes -->
+  <div class="notes-area">
+    <div class="notes-label">📝 備註</div>
+    <textarea class="notes-input" placeholder="行程備註、特殊提醒..."></textarea>
+  </div>
+
+  <div class="footer">⛺ 祝露營愉快、平安歸來 ⛺</div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────
+const EXTRA = 5;  // blank rows for each category
+const FOOD_EXTRA = 10; // food: all blanks
+
+const categories = {
+  rvRoom: {
+    items: ['電動充氣','電池/檢查','燈/頭燈/充電線','螺絲起子','垃圾袋','磁鐵勾','充電器','零食/食材','夾鏈袋'],
+    extraCount: EXTRA
+  },
+  roomItems: {
+    items: ['地布','充氣床','防潮墊 ×2','床包','枕頭 ×4','被子','帳篷'],
+    extraCount: EXTRA
+  },
+  clothingItems: {
+    items: ['衣物袋','備用藥','衛生紙','衣服','吹風機','盥洗用具','浴巾','備用衣','襪子','梳子','垃圾袋'],
+    extraCount: EXTRA
+  },
+  outdoorItems: {
+    items: ['桌子','椅子','延長線','電風扇','快煮鍋/壓力鍋','羽毛球','棒球'],
+    extraCount: EXTRA
+  },
+  rvOutdoor: {
+    items: ['餐巾紙','垃圾袋 ×2','餐具','卡式爐','鍋子','瓦斯 ×2','調味粉/油','烘培紙','蒼蠅紙','水','洗碗精/菜瓜布','濕紙巾','酒精擦'],
+    extraCount: EXTRA
+  },
+  carItems: {
+    items: ['水壺','吸塵器'],
+    extraCount: EXTRA
+  }
+};
+
+const defaultFood = ['全聯吐司','玉米','蛋','起司','蝦子','避風塘','鹹蛋','小玉米','節瓜','蒸蛋','蒸架'];
+
+// ── Render ─────────────────────────────────────────────────────────────
+function renderAll() {
+  for (const [id, cfg] of Object.entries(categories)) {
+    renderCategory(id, cfg.items, cfg.extraCount);
+  }
+  renderFood();
+  updateProgress();
+}
+
+function makeCheckRow(text, isBlank = false) {
+  const row = document.createElement('div');
+  row.className = 'item-row' + (isBlank ? ' blank-row' : '');
+
+  const box = document.createElement('div');
+  box.className = 'check-box';
+  box.onclick = () => toggleCheck(box, row);
+
+  row.appendChild(box);
+
+  const inp = document.createElement('input');
+  inp.className = 'blank-input';
+  inp.type = 'text';
+  inp.placeholder = isBlank ? '自填...' : '';
+  if (!isBlank) inp.value = text;
+  row.appendChild(inp);
+
+  return row;
+}
+
+function toggleCheck(box, row) {
+  box.classList.toggle('checked');
+  row.classList.toggle('checked-row');
+  updateProgress();
+}
+
+function renderCategory(containerId, items, extraCount) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  items.forEach(item => container.appendChild(makeCheckRow(item, false)));
+  if (extraCount > 0) {
+    const hr = document.createElement('hr');
+    hr.className = 'section-divider';
+    container.appendChild(hr);
+    for (let i = 0; i < extraCount; i++) container.appendChild(makeCheckRow('', true));
+  }
+}
+
+function renderFood() {
+  const container = document.getElementById('foodItems');
+  container.innerHTML = '';
+  // All food rows are blank (re-fill each time), prefilled with defaults
+  const totalSlots = Math.max(defaultFood.length, FOOD_EXTRA) + FOOD_EXTRA;
+  for (let i = 0; i < totalSlots; i++) {
+    const row = document.createElement('div');
+    row.className = 'item-row blank-row';
+
+    const box = document.createElement('div');
+    box.className = 'check-box';
+    box.onclick = () => toggleCheck(box, row);
+
+    const inp = document.createElement('input');
+    inp.className = 'blank-input';
+    inp.type = 'text';
+    inp.placeholder = i < defaultFood.length ? defaultFood[i] : '食材...';
+    // Pre-fill with default food names
+    if (i < defaultFood.length) inp.value = defaultFood[i];
+
+    row.appendChild(box);
+    row.appendChild(inp);
+    container.appendChild(row);
+  }
+}
+
+// ── Progress ───────────────────────────────────────────────────────────
+function updateProgress() {
+  const all = document.querySelectorAll('.check-box');
+  const checked = document.querySelectorAll('.check-box.checked');
+  const pct = all.length ? Math.round(checked.length / all.length * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `已勾選 ${checked.length} / ${all.length} 項（${pct}%）`;
+}
+
+// ── Altitude Lookup via Claude API + web_search ────────────────────────
+function onAreaInput() {
+  const disp = document.getElementById('altitudeDisplay');
+  disp.textContent = '';
+  disp.className = 'altitude-display';
+}
+
+async function lookupAltitude() {
+  const area = document.getElementById('campArea').value.trim();
+  if (!area) { showAlt('請先輸入露營區域名稱', true); return; }
+
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true;
+  btn.textContent = '查詢中…';
+  showAlt('🔍 AI 搜尋中…', false);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: `你是一個幫助查詢台灣露營區海拔高度的助手。
+用戶會輸入一個露營區名稱，請用網路搜尋找出該露營區的海拔高度。
+你必須只回傳一個 JSON 物件，格式如下，不要有任何其他文字或 markdown：
+{"found": true, "name": "露營區全名", "elevation": 1234, "note": "補充說明（可選）"}
+如果找不到，回傳：{"found": false, "name": "", "elevation": null, "note": "找不到原因"}`,
+        messages: [{ role: 'user', content: `請搜尋「${area}」露營區的海拔高度，用繁體中文回答。` }]
+      })
+    });
+
+    const data = await response.json();
+
+    // Extract text from all content blocks (including after tool use)
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+    const rawText = textBlocks.join('').trim();
+
+    // Parse JSON — strip any accidental markdown fences
+    const clean = rawText.replace(/```json|```/g, '').trim();
+    let result;
+    try {
+      result = JSON.parse(clean);
+    } catch(parseErr) {
+      // Try to extract JSON object from text
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (match) result = JSON.parse(match[0]);
+      else throw new Error('無法解析回應');
+    }
+
+    if (result.found && result.elevation !== null) {
+      const note = result.note ? `（${result.note}）` : '';
+      showAlt(`📍 ${result.name} ｜ 海拔約 ${result.elevation} 公尺 ${note}`, false);
+    } else {
+      showAlt(`⚠️ ${result.note || '找不到該露營區的海拔資料，請嘗試完整名稱'}`, true);
+    }
+
+  } catch(e) {
+    console.error(e);
+    showAlt('查詢失敗，請稍後再試', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '查海拔';
+  }
+}
+
+function showAlt(msg, isError) {
+  const disp = document.getElementById('altitudeDisplay');
+  disp.textContent = msg;
+  disp.className = 'altitude-display' + (isError ? ' error' : '');
+}
+
+// ── Reset ──────────────────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('確定要重置所有勾選與食材內容嗎？')) return;
+  renderAll();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+// Set today's date
+document.getElementById('tripDate').valueAsDate = new Date();
+renderAll();
+</script>
+</body>
+</html>
